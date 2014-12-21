@@ -15,6 +15,7 @@ object MyModule {
 
   def main(args: Array[String]): Unit =
     println(formatAbs(-42))
+    println((1 to 10).map(i => fib(i)))
 
   // A definition of factorial, using a local, tail recursive function
   def factorial(n: Int): Int = {
@@ -36,7 +37,14 @@ object MyModule {
 
   // Exercise 1: Write a function to compute the nth fibonacci number
 
-  def fib(n: Int): Int = ???
+  def fib(n: Int): Int = {
+    @annotation.tailrec
+    def go(n1: Int, n2: Int, c: Int): Int = {
+      if (c<=0) n1
+      else go(n2, n1+n2, c-1)
+    }
+    go(0,1,n)
+  }
 
   // This definition and `formatAbs` are very similar..
   private def formatFactorial(n: Int) = {
@@ -129,7 +137,15 @@ object PolymorphicFunctions {
 
   // Exercise 2: Implement a polymorphic function to check whether
   // an `Array[A]` is sorted
-  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = ???
+  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = {
+    @annotation.tailrec
+    def go(i: Int): Boolean = {
+      if (i >= as.length-1) true
+      else if (gt(as(i), as(i+1))) false
+      else go(i+1)
+    }
+    go(0)
+  }
 
   // Polymorphic functions are often so constrained by their type
   // that they only have one implementation! Here's an example:
@@ -142,13 +158,13 @@ object PolymorphicFunctions {
   // Note that `=>` associates to the right, so we could
   // write the return type as `A => B => C`
   def curry[A,B,C](f: (A, B) => C): A => (B => C) =
-    ???
+    (a: A) => (b: B) => f(a,b)
 
   // NB: The `Function2` trait has a `curried` method already
 
   // Exercise 4: Implement `uncurry`
   def uncurry[A,B,C](f: A => B => C): (A, B) => C =
-    ???
+    (a: A, b: B) => f(a)(b)
 
   /*
   NB: There is a method on the `Function` object in the standard library,
@@ -163,5 +179,26 @@ object PolymorphicFunctions {
   // Exercise 5: Implement `compose`
 
   def compose[A,B,C](f: B => C, g: A => B): A => C =
-    ???
+    (a: A) => f(g(a))
+
+  def main(args: Array[String]): Unit = {
+
+    val isSortedTest = (as: Array[Int]) => {
+      val sorted = isSorted(as, (a: Int, b: Int) => a>b)
+      println(as.toList + (if (sorted) " is sorted" else " is not sorted"))
+    }
+
+    isSortedTest(Array())
+    isSortedTest(Array(1))
+    isSortedTest(Array(1,2))
+    isSortedTest(Array(2,1))
+    isSortedTest(Array(1,1))
+
+    val sum = (a: Int, b: Int) => a+b
+    println("1+2=" + sum(1,2))
+    println("1+2=" + curry(sum)(1)(2))
+    println("1+2=" + uncurry(curry(sum))(1,2))
+
+  }
+
 }
